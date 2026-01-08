@@ -325,8 +325,36 @@ function App() {
   const [popupVisible, setPopupVisible] = useState(false);
   /** @type {[string, Function]} */
   const [popupContent, setPopupContent] = useState('');
+  /** @type {[boolean, Function]} */
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const audioRef = useRef(null);
   /** @type {Translation} */
   const t = translations[lang];
+
+  // Handle background music toggle
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio('https://assets.mixkit.co/music/preview/mixkit-space-ambient-635.mp3');
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.3;
+    }
+    
+    if (soundEnabled) {
+      audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+    } else {
+      audioRef.current.pause();
+    }
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, [soundEnabled]);
+
+  const toggleSound = () => {
+    setSoundEnabled(prev => !prev);
+  };
   const showPopup = (content) => {
     setPopupContent(content);
     setPopupVisible(true);
@@ -434,6 +462,16 @@ function App() {
           <img src={reactLogo} alt="Logo" style={{ height: '2.5rem', verticalAlign: 'middle' }} />
         </div>
         <ul className="nav-links">
+          <li>
+            <button 
+              onClick={toggleSound} 
+              className={`sound-toggle-btn ${soundEnabled ? 'active' : ''}`}
+              aria-label={soundEnabled ? 'Mute background music' : 'Play background music'}
+              title={soundEnabled ? 'Mute background music' : 'Play background music'}
+            >
+              {soundEnabled ? '🔊' : '🔇'}
+            </button>
+          </li>
           {currentPage === 'home' ? (
             <>
               <li><a href="#hero">Hero</a></li>

@@ -241,6 +241,78 @@ html, body, #root {
   box-shadow: 0 0 8px #ff0000;
 }
 
+/* Sound Toggle Button */
+.sound-toggle-btn {
+  background: transparent;
+  border: 2px solid var(--primary-glow);
+  color: var(--accent-glow);
+  font-size: 1.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sound-toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, var(--primary-glow), transparent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.4s ease;
+  opacity: 0;
+}
+
+.sound-toggle-btn:hover::before,
+.sound-toggle-btn.active::before {
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+}
+
+.sound-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 0 15px var(--primary-glow),
+    0 0 30px var(--secondary-glow);
+  border-color: var(--secondary-glow);
+}
+
+.sound-toggle-btn.active {
+  background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+  border-color: var(--accent-glow);
+  box-shadow: 
+    0 0 20px var(--primary-glow),
+    0 0 40px var(--secondary-glow),
+    inset 0 0 10px rgba(255, 255, 255, 0.2);
+  animation: soundPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes soundPulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px var(--primary-glow),
+      0 0 40px var(--secondary-glow);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px var(--primary-glow),
+      0 0 60px var(--secondary-glow),
+      0 0 80px var(--accent-glow);
+  }
+}
+
 @media (max-width: 768px) {
   .main-nav {
     flex-direction: column;
