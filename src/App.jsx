@@ -185,7 +185,7 @@ function TrickyCube() {
 /** @type {{ EN: Translation, RU: Translation }} */
 const translations = {
   EN: {
-    heroTitle: 'MARS Attacks new!!!',
+    heroTitle: 'MARS Attacks n212ew!!!',
     heroSubtitle: 'THE INVASION HAS BEGUN • RESISTANCE IS FUTILE • WELCOME YOUR NEW OVERLORDS',
     join: 'JOIN THE INVASION',
     surrender: 'SURRENDER NOW',
