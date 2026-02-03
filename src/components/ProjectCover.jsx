@@ -159,8 +159,8 @@ function ProjectCover({ onEnter }) {
       {/* Main Content */}
       <div className="cover-content">
         <div className="cover-title-wrapper">
-          <h1 className="cover-title glitch" data-text="MARS ATTACKS!">
-            MARS ATTACKS!
+          <h1 className="cover-title glitch" data-text="MARS NEEDS WIFI!">
+            MARS NEEDS WIFI!
           </h1>
           <div className="title-underline"></div>
         </div>
