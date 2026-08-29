@@ -182,7 +182,7 @@ function TrickyCube() {
  * @property {string} htmlElementsTitle
  */
 
-/** @type {{ EN: Translation, RU: Translation }} */
+/** @type {{ EN: Translation, RU: Translation, ES: Translation }} */
 const translations = {
   EN: {
     heroTitle: 'MARS ATTACKS (But First, Coffee ☕)',
@@ -212,7 +212,7 @@ const translations = {
     martianRed: 'Martian Red',
     martianGreen: 'Martian Green',
     footer: 'ACK ACK ACK! • MARS EMPIRE © 2024 • ALL HUMANS RESERVED FOR EXPERIMENTATION',
-    lang: 'RU',
+    lang: 'RU 🇷🇺',
     htmlElements: 'HTML Elements Demo',
     backToHome: 'Back to Home',
     htmlElementsTitle: 'HTML Elements Showcase',
@@ -276,7 +276,7 @@ const translations = {
     martianRed: 'Марсианский Красный',
     martianGreen: 'Марсианский Зелёный',
     footer: 'АК АК АК! • ИМПЕРИЯ МАРСА © 2024 • ВСЕ ЛЮДИ ЗАРЕЗЕРВИРОВАНЫ ДЛЯ ЭКСПЕРИМЕНТОВ',
-    lang: 'EN',
+    lang: 'ES 🇪🇸',
     htmlElements: 'HTML Элементы Демо',
     backToHome: 'Назад на Главную',
     htmlElementsTitle: 'Витрина HTML Элементов',
@@ -311,13 +311,77 @@ const translations = {
     all: 'Все',
     active: 'Активные',
     inactive: 'Неактивные'
+  },
+  ES: {
+    heroTitle: '¡ATAQUE DE MARTE!',
+    heroSubtitle: 'LA INVASIÓN HA COMENZADO • LA RESISTENCIA ES INÚTIL • BIENVENIDOS A SUS NUEVOS AMOS',
+    join: 'ÚNETE A LA INVASIÓN',
+    surrender: 'RÍNDETE AHORA',
+    featuresTitle: 'TECNOLOGÍA ALIENÍGENA',
+    brain: 'EXTRACCIÓN CEREBRAL',
+    brainDesc: 'Tecnología marciana avanzada para la extracción y análisis eficiente de cerebros humanos.',
+    rays: 'RAYOS DE LA MUERTE',
+    raysDesc: 'Armas de desintegración de última generación que reducen a los humanos a esqueletos coloridos.',
+    mind: 'CONTROL MENTAL',
+    mindDesc: 'Poderes hipnóticos marcianos para doblegar la voluntad humana y establecer nuestro imperio galáctico.',
+    testZone: 'ZONA DE PRUEBAS INTERACTIVA',
+    dropdownShow: 'Mostrar Desplegable',
+    dropdownHide: 'Ocultar Desplegable',
+    martian: 'Marciano',
+    venusian: 'Venusino',
+    earthling: 'Terrícola',
+    textShow: 'Mostrar Líneas de Texto',
+    textHide: 'Ocultar Líneas de Texto',
+    line1: '• ¡Los marcianos están llegando!',
+    line2: '• ¡Escondan sus vacas!',
+    line3: '• ¡Preparen los rayos de la muerte!',
+    click: 'Clics',
+    times: 'veces',
+    martianRed: 'Rojo Marciano',
+    martianGreen: 'Verde Marciano',
+    footer: '¡ACK ACK ACK! • IMPERIO DE MARTE © 2024 • TODOS LOS HUMANOS RESERVADOS PARA EXPERIMENTACIÓN',
+    lang: 'EN 🇺🇸',
+    htmlElements: 'Demo de Elementos HTML',
+    backToHome: 'Volver al Inicio',
+    htmlElementsTitle: 'Galería de Elementos HTML',
+    interactiveComponents: 'Componentes Interactivos',
+    interactiveComponentsTitle: 'Galería de Componentes React Interactivos',
+    timer: 'Temporizador',
+    startTimer: 'Iniciar Temporizador',
+    stopTimer: 'Detener Temporizador',
+    resetTimer: 'Reiniciar Temporizador',
+    progressDemo: 'Demo de Progreso',
+    increaseProgress: 'Aumentar Progreso',
+    decreaseProgress: 'Disminuir Progreso',
+    modalDemo: 'Demo de Modal',
+    openModal: 'Abrir Modal',
+    closeModal: 'Cerrar Modal',
+    modalTitle: '¡Alerta Marciana!',
+    modalContent: 'Este es un diálogo modal con información alienígena importante.',
+    tabsDemo: 'Demo de Pestañas',
+    tab1: 'Planes de Invasión',
+    tab2: 'Tecnología Alienígena',
+    tab3: 'Estado de la Tierra',
+    accordionDemo: 'Demo de Acordeón',
+    toastDemo: 'Notificaciones Toast',
+    showToast: 'Mostrar Notificación',
+    imageGallery: 'Galería de Imágenes',
+    colorPicker: 'Selector de Color',
+    formValidation: 'Validación de Formulario',
+    submit: 'Enviar',
+    loading: 'Cargando...',
+    searchFilter: 'Búsqueda y Filtro',
+    searchPlaceholder: 'Buscar elementos...',
+    all: 'Todos',
+    active: 'Activos',
+    inactive: 'Inactivos'
   }
 };
 
 function App() {
   /** @type {[boolean, Function]} */
   const [showCover, setShowCover] = useState(true);
-  /** @type {['EN' | 'RU', Function]} */
+  /** @type {['EN' | 'RU' | 'ES', Function]} */
   const [lang, setLang] = useState('EN');
   /** @type {['home' | 'html-elements' | 'interactive-components', Function]} */
   const [currentPage, setCurrentPage] = useState('home');
@@ -453,18 +517,18 @@ function App() {
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <div className="mars-landing" id="main-content" role="main">
         {currentPage === 'home' ? (
-          <HomePage t={t} setCurrentPage={setCurrentPage} showPopup={showPopup} />
+          <HomePage t={t} setCurrentPage={setCurrentPage} showPopup={showPopup} setLang={setLang} />
         ) : currentPage === 'html-elements' ? (
-          <HTMLElementsPage t={t} />
+          <HTMLElementsPage t={t} setLang={setLang} />
         ) : (
-          <InteractiveComponentsPage t={t} />
+          <InteractiveComponentsPage t={t} setLang={setLang} />
         )}
       </div>
     </>
   )
 }
 
-function HomePage({ t, setCurrentPage, showPopup }) {
+function HomePage({ t, setCurrentPage, showPopup, setLang }) {
   const funnyMessages = {
     join: [
       "🚀 EXCELLENT CHOICE, EARTHLING! Your application to join our glorious invasion has been submitted. Side effects may include: temporary disintegration, chronic case of being green, and an irresistible urge to say 'ACK ACK ACK!' Report to the nearest UFO for your complimentary brain scan!",
@@ -517,7 +581,7 @@ function HomePage({ t, setCurrentPage, showPopup }) {
         </svg>
         <div className="alien-overlay"></div>
         <div className="hero-content">
-          <div className="ufo" onClick={() => setLang(l => l === 'EN' ? 'RU' : 'EN')}>🛸</div>
+          <div className="ufo" onClick={() => setLang(l => l === 'EN' ? 'RU' : l === 'RU' ? 'ES' : 'EN')}>🛸</div>
           <h1 className="hero-title" data-text={t.heroTitle}>{t.heroTitle}</h1>
           <div className="hero-tagline">Defend Earth or Join the Martian Empire. The choice is yours!</div>
           <p className="hero-subtitle">
@@ -617,7 +681,7 @@ function HomePage({ t, setCurrentPage, showPopup }) {
       <footer id="footer" className="footer">
         <div className="container">
           <p>{t.footer}</p>
-          <button className="lang-switch-btn" aria-label="Switch language" onClick={() => setLang(l => l === 'EN' ? 'RU' : 'EN')}>
+          <button className="lang-switch-btn" aria-label="Switch language" onClick={() => setLang(l => l === 'EN' ? 'RU' : l === 'RU' ? 'ES' : 'EN')}>
             <span className="btn-icon" role="img" aria-label="language">🌐</span>
             {t.lang}
           </button>
@@ -627,7 +691,7 @@ function HomePage({ t, setCurrentPage, showPopup }) {
   );
 }
 
-function HTMLElementsPage({ t }) {
+function HTMLElementsPage({ t, setLang }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -965,7 +1029,7 @@ function invadeEarth() {
         <footer className="footer">
           <div className="container">
             <p>ACK ACK ACK! • MARS EMPIRE © 2024 • ALL HUMANS RESERVED FOR EXPERIMENTATION</p>
-            <button className="lang-switch-btn" aria-label="Switch language" onClick={() => setLang(l => l === 'EN' ? 'RU' : 'EN')}>
+            <button className="lang-switch-btn" aria-label="Switch language" onClick={() => setLang(l => l === 'EN' ? 'RU' : l === 'RU' ? 'ES' : 'EN')}>
               <span className="btn-icon" role="img" aria-label="language">🌐</span>
               {t.lang}
             </button>
@@ -976,7 +1040,7 @@ function invadeEarth() {
   );
 }
 
-function InteractiveComponentsPage({ t }) {
+function InteractiveComponentsPage({ t, setLang }) {
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
   const [progress, setProgress] = useState(50);
@@ -1528,7 +1592,7 @@ function InteractiveComponentsPage({ t }) {
         <footer className="footer">
           <div className="container">
             <p>ACK ACK ACK! • MARS EMPIRE © 2024 • ALL HUMANS RESERVED FOR EXPERIMENTATION</p>
-            <button className="lang-switch-btn" aria-label="Switch language" onClick={() => setLang(l => l === 'EN' ? 'RU' : 'EN')}>
+            <button className="lang-switch-btn" aria-label="Switch language" onClick={() => setLang(l => l === 'EN' ? 'RU' : l === 'RU' ? 'ES' : 'EN')}>
               <span className="btn-icon" role="img" aria-label="language">🌐</span>
               {t.lang}
             </button>
