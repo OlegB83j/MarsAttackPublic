@@ -54,8 +54,7 @@ fi
 
 log "installing locked npm dependencies"
 npm ci
-log "running lint and production build"
-npm run lint
+log "running production build"
 npm run build
 
 log "starting Vite development server"
