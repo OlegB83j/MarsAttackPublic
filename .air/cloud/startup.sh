@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Air Cloud startup script for this repository (run by the launch as .air/cloud/startup.sh).
+# Part 1 (sections 0-5) installs the JetBrains `jb` CLI; part 2 (section 6) sets up and
+# serves this React + Vite app. Part 1 needs the two custom domains listed under EGRESS below.
 # Startup-script fragment for an Air Cloud automation that needs `jb` (JetBrains/jb-cli).
 # Paste inline into the environment configuration's startup script (PATCH, not PUT —
 # PUT resets startup_script to NULL; jcp-air/cloud/backend/docs/environment-configurations.md:51).
@@ -218,6 +221,89 @@ verify_jb() {
     log "installed but NOT authenticated — see jb auth login --service <svc> --token <tok>"
 }
 
+# --- 6. This repository: React 19 + Vite 7 SPA -------------------------------
+# Runs after the jb-cli install. Two launch modes, told apart by AIR_STARTUP_MODE only:
+#   warmup  the snapshot-baking run (and the env-setup companion): install, build, start the
+#           dev server and BLOCK in healthcheck until it answers, so node_modules, the npm
+#           cache and Vite's pre-bundle cache all land in the snapshot.
+#   task    a real task run: same steps, but the dev server is left starting in the
+#           background and the script returns at once.
+# There is no test suite; `npm run lint` and `npm run type` currently fail on main because of
+# pre-existing code errors, so neither is a readiness signal. `npm run build` passes and is.
+readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+readonly DEV_PORT=3000
+readonly DEV_LOG="$HOME/.marsattack-vite-dev.log"
+
+if [ "${AIR_STARTUP_MODE:-}" = warmup ]; then WARMUP=1; else WARMUP=; fi
+
+check_node() {
+    command -v node > /dev/null 2>&1 || { err "node is not on PATH; the workspace image should ship it"; return 1; }
+    command -v npm  > /dev/null 2>&1 || { err "npm is not on PATH"; return 1; }
+    log "node $(node --version), npm $(npm --version)"
+}
+
+install_dependencies() {
+    cd "$REPO_ROOT" || return 1
+    if [ -f package-lock.json ]; then
+        log "npm ci (from package-lock.json)"
+        npm ci --no-audit --no-fund || { err "npm ci failed"; return 1; }
+    else
+        log "npm install (no package-lock.json found)"
+        npm install --no-audit --no-fund || { err "npm install failed"; return 1; }
+    fi
+    log "dependencies installed"
+}
+
+# Proves the app compiles and primes Vite's build cache. ~1s once dependencies are in place.
+build_project() {
+    cd "$REPO_ROOT" || return 1
+    log "npm run build"
+    npm run build || { err "vite build failed"; return 1; }
+    [ -f dist/index.html ] || { err "build finished but dist/index.html is missing"; return 1; }
+    log "production build OK (dist/)"
+}
+
+# vite.config.js already binds 0.0.0.0:3000 and sets allowedHosts=true, so the Orca proxy's
+# public hostname is accepted as Host. Only bytes on disk survive the snapshot, so this
+# starts on every launch; it is skipped when something already listens on the port.
+start_dev_server() {
+    cd "$REPO_ROOT" || return 1
+    if curl -sS -o /dev/null -m 3 "http://localhost:$DEV_PORT/" 2>/dev/null; then
+        log "something already answers on port $DEV_PORT; not starting a second dev server"
+        return 0
+    fi
+    : > "$DEV_LOG"
+    nohup npm run dev -- --host 0.0.0.0 --port "$DEV_PORT" >> "$DEV_LOG" 2>&1 < /dev/null &
+    log "vite dev server starting in the background (pid $!, log $DEV_LOG)"
+}
+
+# Readiness for a real task: the dev server serves the app's index.html through the proxy
+# (Host header set to a foreign hostname, as the proxy does) and the production build exists.
+# Polls without a deadline of its own; the launch applies the outer timeout.
+healthcheck() {
+    local body code i=0
+    log "healthcheck: waiting for http://localhost:$DEV_PORT/ to serve the app"
+    while :; do
+        body=$(curl -sS -m 5 -w '\n%{http_code}' -H 'Host: air-healthcheck.example' "http://localhost:$DEV_PORT/" 2>/dev/null)
+        code=${body##*$'\n'}
+        if [ "$code" = 200 ] && printf '%s' "$body" | grep -q 'Mars Attacks - Animated Project Cover' \
+                              && printf '%s' "$body" | grep -q '/src/main.jsx'; then
+            break
+        fi
+        i=$((i + 1))
+        if [ $((i % 5)) -eq 0 ]; then
+            log "healthcheck: still waiting (last HTTP code '${code:-none}'); dev server log tail:"
+            tail -n 5 "$DEV_LOG" 2>/dev/null | sed 's/^/    /'
+        fi
+        sleep 2
+    done
+    log "healthcheck: dev server answers 200 with the Mars Attacks index page"
+    [ -f "$REPO_ROOT/dist/index.html" ] || { err "healthcheck: dist/index.html missing, build did not run"; return 1; }
+    command -v jb > /dev/null 2>&1 || { err "healthcheck: jb is not on PATH"; return 1; }
+    log "healthcheck: OK"
+}
+
+# --- main ---------------------------------------------------------------------
 init_profile_hook
 install_unzip_shim || exit 1
 if probe_reachability; then
@@ -227,4 +313,14 @@ else
     install_jb_from_github || { err "no usable install path for jb-cli in this workspace"; exit 1; }
 fi
 verify_jb || exit 1
+
+check_node || exit 1
+install_dependencies || exit 1
+build_project || exit 1
+start_dev_server || exit 1
+if [ -n "${WARMUP:-}" ]; then
+    healthcheck || exit 1
+else
+    log "task mode: not waiting for the dev server (see $DEV_LOG)"
+fi
 log "environment ready"
