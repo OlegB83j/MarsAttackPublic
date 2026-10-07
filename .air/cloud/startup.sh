@@ -227,4 +227,56 @@ else
     install_jb_from_github || { err "no usable install path for jb-cli in this workspace"; exit 1; }
 fi
 verify_jb || exit 1
+
+# --- 6. Node/Vite app ---------------------------------------------------------
+# React 19 + Vite 7 SPA. The workspace image ships node/npm. `npm ci` and the production
+# build run on every launch (fast, and primed into the warm-up snapshot); the dev server is
+# started detached on port 3000 (vite.config.js already binds 0.0.0.0 with allowedHosts: true).
+if [ "${AIR_STARTUP_MODE:-}" = warmup ]; then WARMUP=1; else WARMUP=; fi
+readonly REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+readonly DEV_LOG=/tmp/vite-dev.log
+readonly DEV_PORT=3000
+
+install_app_deps() {
+    cd "$REPO_DIR" || return 1
+    log "npm ci (node $(node -v), npm $(npm -v))"
+    npm ci --no-audit --no-fund || { err "npm ci failed"; return 1; }
+    log "npm run build"
+    npm run build || { err "vite build failed"; return 1; }
+    # Lint/type-check are informational: the current code base does not pass `tsc --noEmit`.
+    npm run lint > /tmp/npm-lint.log 2>&1 && log "lint ok" || log "lint reports issues (see /tmp/npm-lint.log)"
+}
+
+start_dev_server() {
+    cd "$REPO_DIR" || return 1
+    if curl -fsS -o /dev/null "http://localhost:$DEV_PORT/" 2>/dev/null; then
+        log "dev server already answering on :$DEV_PORT"; return 0
+    fi
+    log "starting vite dev server on :$DEV_PORT (log: $DEV_LOG)"
+    nohup npm run dev -- --port "$DEV_PORT" --strictPort > "$DEV_LOG" 2>&1 < /dev/null &
+}
+
+# Ready when the dev server serves index.html and transforms the app entry module, probed
+# with a foreign Host header the way the exposed proxy reaches it.
+healthcheck() {
+    local n=0
+    while :; do
+        if curl -fsS -H "Host: preview.example.net" "http://localhost:$DEV_PORT/" 2>/dev/null | grep -q 'id="root"' \
+           && curl -fsS -H "Host: preview.example.net" "http://localhost:$DEV_PORT/src/main.jsx" -o /dev/null 2>/dev/null; then
+            log "healthcheck: dev server serves the app on :$DEV_PORT"
+            return 0
+        fi
+        if ! pgrep -f "vite.*--port $DEV_PORT" > /dev/null; then
+            err "healthcheck: vite dev server is not running; last log lines:"
+            tail -20 "$DEV_LOG" >&2
+            return 1
+        fi
+        n=$((n + 1)); [ $((n % 5)) -eq 0 ] && log "healthcheck: waiting for :$DEV_PORT ..."
+        sleep 2
+    done
+}
+
+install_app_deps || exit 1
+start_dev_server || exit 1
+if [ -n "${WARMUP:-}" ]; then healthcheck || exit 1; fi
 log "environment ready"
