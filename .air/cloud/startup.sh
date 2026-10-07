@@ -236,6 +236,7 @@ if [ "${AIR_STARTUP_MODE:-}" = warmup ]; then WARMUP=1; else WARMUP=; fi
 readonly REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 readonly DEV_LOG=/tmp/vite-dev.log
 readonly DEV_PORT=3000
+DEV_PID=
 
 install_app_deps() {
     cd "$REPO_DIR" || return 1
@@ -254,6 +255,7 @@ start_dev_server() {
     fi
     log "starting vite dev server on :$DEV_PORT (log: $DEV_LOG)"
     nohup npm run dev -- --port "$DEV_PORT" --strictPort > "$DEV_LOG" 2>&1 < /dev/null &
+    DEV_PID=$!
 }
 
 # Ready when the dev server serves index.html and transforms the app entry module, probed
@@ -266,7 +268,7 @@ healthcheck() {
             log "healthcheck: dev server serves the app on :$DEV_PORT"
             return 0
         fi
-        if ! pgrep -f "vite.*--port $DEV_PORT" > /dev/null; then
+        if [ -n "$DEV_PID" ] && ! kill -0 "$DEV_PID" 2>/dev/null; then
             err "healthcheck: vite dev server is not running; last log lines:"
             tail -20 "$DEV_LOG" >&2
             return 1
