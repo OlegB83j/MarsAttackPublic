@@ -218,13 +218,24 @@ verify_jb() {
     log "installed but NOT authenticated — see jb auth login --service <svc> --token <tok>"
 }
 
+use_existing_jb() {
+    command -v jb > /dev/null 2>&1 || return 1
+    jb --version > /dev/null 2>&1 || return 1
+    log "using existing jb installation: $(jb --version 2>&1 | head -1)"
+    return 0
+}
+
 init_profile_hook
-install_unzip_shim || exit 1
-if probe_reachability; then
-    install_jb_supported || exit 1
+if use_existing_jb; then
+    verify_jb || exit 1
 else
-    log "falling back to the GitHub release asset"
-    install_jb_from_github || { err "no usable install path for jb-cli in this workspace"; exit 1; }
+    install_unzip_shim || exit 1
+    if probe_reachability; then
+        install_jb_supported || exit 1
+    else
+        log "falling back to the GitHub release asset"
+        install_jb_from_github || { err "no usable install path for jb-cli in this workspace"; exit 1; }
+    fi
+    verify_jb || exit 1
 fi
-verify_jb || exit 1
 log "environment ready"
