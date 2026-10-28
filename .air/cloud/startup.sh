@@ -4,6 +4,9 @@ set -uo pipefail
 log() { printf 'startup: %s\n' "$*"; }
 err() { printf 'startup: ERROR: %s\n' "$*" >&2; }
 
+mkdir -p /usr/local/etc
+echo 'export PATH=/usr/local/bin:$PATH' > /usr/local/etc/air-env.sh
+
 healthcheck() {
   log "waiting for Vite on port 3000"
   while ! curl -fsS http://127.0.0.1:3000/ | grep -q '<div id="root">'; do
