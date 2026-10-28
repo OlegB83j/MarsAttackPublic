@@ -5,7 +5,7 @@ log() { printf 'startup: %s\n' "$*"; }
 err() { printf 'startup: ERROR: %s\n' "$*" >&2; }
 
 sudo mkdir -p /usr/local/etc
-printf '%s\n' 'export PATH=/usr/local/bin:$PATH' | sudo tee /usr/local/etc/air-env.sh >/dev/null
+printf '%s\n' 'export PATH=/usr/local/nvm/versions/node/v25.2.1/bin:$PATH' | sudo tee /usr/local/etc/air-env.sh >/dev/null
 
 set +e
 echo "BASH_ENV=$BASH_ENV"
