@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -euo pipefail
 
 log() { printf 'startup: %s\n' "$*"; }
 err() { printf 'startup: ERROR: %s\n' "$*" >&2; }
 
-mkdir -p /usr/local/etc
-echo 'export PATH=/usr/local/bin:$PATH' > /usr/local/etc/air-env.sh
+sudo mkdir -p /usr/local/etc
+printf '%s\n' 'export PATH=/usr/local/bin:$PATH' | sudo tee /usr/local/etc/air-env.sh >/dev/null
 
 healthcheck() {
   log "waiting for Vite on port 3000"
