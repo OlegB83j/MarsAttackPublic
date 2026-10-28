@@ -7,6 +7,15 @@ err() { printf 'startup: ERROR: %s\n' "$*" >&2; }
 sudo mkdir -p /usr/local/etc
 printf '%s\n' 'export PATH=/usr/local/bin:$PATH' | sudo tee /usr/local/etc/air-env.sh >/dev/null
 
+echo "BASH_ENV=$BASH_ENV"
+echo "flags=$-"
+cat "$BASH_ENV"
+echo "$PATH" | tr : '\n' | head -5
+ls -l /usr/local/bin/node
+type -a node
+node -v
+npm -v
+
 healthcheck() {
   log "waiting for Vite on port 3000"
   while ! curl -fsS http://127.0.0.1:3000/ | grep -q '<div id="root">'; do
